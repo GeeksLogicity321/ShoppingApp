@@ -10,32 +10,45 @@ import PrimaryButton from '../../components/PrimaryButton';
 import {useDispatch, useSelector} from 'react-redux';
 import {setUser} from '../../redux/userSlice';
 import {setLoader} from '../../redux/globalSlice';
+import {WCAPI} from '../../utils/apiRequest';
 
 const EditProfile = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {isLogin, userData} = useSelector(state => state.user);
   const [firstName, setFirstName] = useState(
-    isLogin ? userData?.firstName : '',
+    isLogin ? userData?.first_name : '',
   );
-  const [lastName, setLastName] = useState(isLogin ? userData?.lastName : '');
+  const [lastName, setLastName] = useState(isLogin ? userData?.last_name : '');
 
   const saveChanges = () => {
     dispatch(setLoader(true));
+
     let payload = {
-      firstName,
-      lastName,
+      first_name: firstName,
+      last_name: lastName,
     };
-    setTimeout(() => {
-      dispatch(setUser({...userData, ...payload}));
-      dispatch(setLoader(false));
-      Toast.show({
-        type: 'success',
-        text1: 'Successfully',
-        text2: 'Your profile name has been successfully changed.',
+
+    WCAPI.put(`customers/${userData?.id}`, payload)
+      .then(response => {
+        dispatch(setUser(response));
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'success',
+          text1: 'Successfully',
+          text2: 'Your profile name has been successfully changed.',
+        });
+        navigation.goBack();
+      })
+      .catch(error => {
+        console.log(error.response.data);
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Oops some error occurred please try again later',
+        });
       });
-      navigation.goBack();
-    }, 2000);
   };
 
   return (

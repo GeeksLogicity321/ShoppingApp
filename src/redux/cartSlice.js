@@ -14,7 +14,7 @@ const cartSlice = createSlice({
       });
       if (ind == -1) {
         let temp = {...action.payload};
-        temp.qty = temp.qty + 1;
+        temp.qty = action.payload.qty;
         state.push(temp);
         Toast.show({
           position: 'bottom',

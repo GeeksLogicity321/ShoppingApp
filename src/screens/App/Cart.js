@@ -51,16 +51,16 @@ const Cart = props => {
             ListFooterComponent={() => (
               <View style={{height: heightPercentageToDP(30)}} />
             )}
-            renderItem={({item, index}) => (
+            renderItem={({item}) => (
               <View style={styles.cardWrapper}>
                 <CartCard
                   id={item.id}
-                  title={item.title}
+                  title={item.name}
                   price={item.price}
                   qty={item.qty}
                   description={item.description}
                   attributes={item.attributes}
-                  image={item.thumbnail}
+                  image={item?.images[0]?.src}
                 />
               </View>
             )}
@@ -107,7 +107,8 @@ const Cart = props => {
                 x{price.qty}
               </Text>
               <Text style={[styles.boldText, {textAlign: 'right'}]}>
-                {constant.currency}.{price.amount}
+                {constant.currency}.{' '}
+                {parseInt(price.amount).toLocaleString('en-US')}
               </Text>
             </View>
           </View>

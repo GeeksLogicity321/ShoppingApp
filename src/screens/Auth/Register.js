@@ -2,10 +2,11 @@ import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
+import React, {useState} from 'react';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
 import {StyleSheet, Text, View, ScrollView} from 'react-native';
-import React from 'react';
+import MaterialIcons from 'react-native-vector-icons/dist/MaterialIcons';
 import Toast from 'react-native-toast-message';
 import {useDispatch} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
@@ -16,10 +17,16 @@ import Header from '../../components/Header';
 import {setUser} from '../../redux/userSlice';
 import {setLoader} from '../../redux/globalSlice';
 import PrimaryButton from '../../components/PrimaryButton';
+import SimpleModal from '../../components/SimpleModal';
+import Alert from '../../components/Alert';
+import {RFPercentage} from 'react-native-responsive-fontsize';
+import {WCAPI} from '../../utils/apiRequest';
 
 const Register = props => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const [errorModal, setErrorModal] = useState(false);
+  const [error, setError] = useState({title: '', msg: ''});
 
   const SignUpSchema = Yup.object().shape({
     firstName: Yup.string().required('Please enter your first name'),
@@ -30,6 +37,9 @@ const Register = props => {
       .integer("A phone number can't include a decimal point")
       .min(8)
       .required('A contact number is required'),
+    userName: Yup.string()
+      .min(6, 'At least more than 6 character')
+      .required('Please choose a user name'),
     email: Yup.string()
       .email('This email address is not valid')
       .required('Please enter your email address!')
@@ -49,22 +59,39 @@ const Register = props => {
   const signUp = value => {
     dispatch(setLoader(true));
     let payload = {
-      firstName: value.firstName,
-      lastName: value.lastName,
+      first_name: value.firstName,
+      last_name: value.lastName,
+      username: value.userName,
       email: value.email,
-      mobileNumber: value.mobileNumber,
       password: value.password,
+      billing: {
+        first_name: value.firstName,
+        last_name: value.lastName,
+        email: value.email,
+        phone: value.mobileNumber,
+      },
     };
-    setTimeout(() => {
-      dispatch(setUser(payload));
-      dispatch(setLoader(false));
-      Toast.show({
-        type: 'success',
-        text1: 'Successfully',
-        text2: 'Your account has bees successfully register.',
+    WCAPI.post('customers', payload)
+      .then(response => {
+        if (response?.data?.status === 400) {
+          dispatch(setLoader(false));
+          setErrorModal(true);
+          setError({title: 'Error', msg: response?.message});
+        } else {
+          Toast.show({
+            type: 'success',
+            text1: 'Successfully',
+            text2: 'Your account has bees successfully register.',
+          });
+          dispatch(setUser(response));
+          dispatch(setLoader(false));
+          navigation.navigate('Home');
+        }
+      })
+      .catch(error => {
+        console.log(error.response);
+        dispatch(setLoader(false));
       });
-      navigation.navigate('Home');
-    }, 2000);
   };
 
   return (
@@ -81,6 +108,7 @@ const Register = props => {
             initialValues={{
               firstName: '',
               lastName: '',
+              userName: '',
               mobileNumber: '',
               email: '',
               password: '',
@@ -125,6 +153,19 @@ const Register = props => {
                 />
                 {touched.firstName && errors.firstName && (
                   <Text style={styles.errorText}>{errors.firstName}</Text>
+                )}
+                <Input
+                  title={'User Name'}
+                  placeholderText={'Choose a user name'}
+                  value={values.userName}
+                  handleOnChangeTxt={handleChange('userName')}
+                  onBlur={() => setFieldTouched('userName')}
+                  keyboardType={'email-address'}
+                  error={touched.userName && errors.userName}
+                  marginTop={heightPercentageToDP(3)}
+                />
+                {touched.userName && errors.userName && (
+                  <Text style={styles.errorText}>{errors.userName}</Text>
                 )}
                 <Input
                   title={'Email'}
@@ -197,6 +238,21 @@ const Register = props => {
           <View style={{height: heightPercentageToDP(10)}} />
         </ScrollView>
       </View>
+      <SimpleModal isVisible={errorModal} onClose={() => setErrorModal(false)}>
+        <Alert
+          heading={error.title}
+          message={error.msg}
+          icon={
+            <MaterialIcons
+              name={'error-outline'}
+              size={RFPercentage(10)}
+              color={colors.danger}
+            />
+          }
+          buttonText={'Cancel'}
+          onPress={() => setErrorModal(false)}
+        />
+      </SimpleModal>
     </>
   );
 };

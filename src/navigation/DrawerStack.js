@@ -10,6 +10,7 @@ import React, {useState} from 'react';
 import {
   Alert,
   FlatList,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -130,12 +131,19 @@ function CustomDrawerContent(props) {
       <View style={styles.drawerContainer}>
         <View style={styles.profileContainer}>
           <View style={styles.profile}>
-            <Feather name={'user'} size={RFPercentage(4)} color={'grey'} />
+            {userData?.avatar_url ? (
+              <Image
+                source={{uri: userData?.avatar_url}}
+                style={styles.image}
+              />
+            ) : (
+              <Feather name={'user'} size={RFPercentage(4)} color={'grey'} />
+            )}
           </View>
           {isLogin && (
             <>
               <Text style={styles.name}>
-                {userData?.firstName + ' ' + userData.lastName}
+                {userData?.first_name + ' ' + userData.last_name}
               </Text>
               <Text style={styles.email}>{userData?.email}</Text>
             </>
@@ -207,6 +215,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#b8b8b859',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
   },
   name: {
     fontSize: fontsSize.md2,

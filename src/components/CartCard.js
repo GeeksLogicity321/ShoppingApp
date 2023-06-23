@@ -3,8 +3,9 @@ import {
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
 import React, {useRef} from 'react';
-import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/dist/FontAwesome5';
+import FontAwesome from 'react-native-vector-icons/dist/FontAwesome';
 import {useDispatch} from 'react-redux';
 import {decreaseCartQty, increaseCartQty, removeItem} from '../redux/cartSlice';
 import constant from '../constants/constant';
@@ -13,8 +14,10 @@ import {fontsFamily, fontsSize} from '../constants/fonts';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import {setLoader} from '../redux/globalSlice';
 import {Swipeable} from 'react-native-gesture-handler';
+import {useNavigation} from '@react-navigation/native';
 
 const CartCard = ({id, title, price, qty, image, attributes, description}) => {
+  const navigation = useNavigation();
   const swipeableRef = useRef();
   const dispatch = useDispatch();
 
@@ -23,7 +26,11 @@ const CartCard = ({id, title, price, qty, image, attributes, description}) => {
       <Pressable
         onPress={() => deleteCartItem(item.id)}
         style={styles.renderRightActionsStyle}>
-        <FontAwesome5 name={'trash'} size={RFPercentage(3)} color={'white'} />
+        <FontAwesome
+          name={'trash'}
+          size={RFPercentage(3)}
+          color={'#ff0000a8'}
+        />
       </Pressable>
     );
   };
@@ -40,19 +47,27 @@ const CartCard = ({id, title, price, qty, image, attributes, description}) => {
       rightThreshold={200}
       renderRightActions={renderRightActions}
       containerStyle={{
-        backgroundColor: colors.textLight,
+        backgroundColor: '#ff000042',
         borderRadius: widthPercentageToDP(2),
       }}
       onSwipeableOpen={() => deleteCartItem(id)}>
       <View style={styles.container}>
-        <Image resizeMode="cover" style={styles.image} source={{uri: image}} />
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('ImageView', {data: image})}>
+          <Image
+            resizeMode="cover"
+            style={styles.image}
+            source={{uri: image}}
+          />
+        </TouchableOpacity>
         <View style={{marginLeft: widthPercentageToDP(4)}}>
           <Text style={styles.title}>{title}</Text>
           <Text numberOfLines={2} style={styles.description}>
             {description}
           </Text>
           <View style={{marginTop: heightPercentageToDP(0.5)}}>
-            {attributes &&
+            {!!attributes &&
               Object.entries(attributes).map(([key, value]) => {
                 return (
                   <Text style={styles.attributes}>
@@ -77,7 +92,7 @@ const CartCard = ({id, title, price, qty, image, attributes, description}) => {
                 <FontAwesome5
                   name={qty > 1 ? 'minus' : 'trash'}
                   size={RFPercentage(2)}
-                  color={'white'}
+                  color={colors.onPrimary}
                 />
               </Pressable>
               <Text style={styles.qtyText}>{qty}</Text>
@@ -89,7 +104,7 @@ const CartCard = ({id, title, price, qty, image, attributes, description}) => {
                 <FontAwesome5
                   name={'plus'}
                   size={RFPercentage(2)}
-                  color={'white'}
+                  color={colors.onPrimary}
                 />
               </Pressable>
             </View>

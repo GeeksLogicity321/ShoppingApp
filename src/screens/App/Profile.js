@@ -9,9 +9,11 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import FontAwesome from 'react-native-vector-icons/dist/FontAwesome';
@@ -20,9 +22,15 @@ import {RFPercentage} from 'react-native-responsive-fontsize';
 import colors from '../../constants/colors';
 import {fontsFamily, fontsSize} from '../../constants/fonts';
 import Header from '../../components/Header';
+import {WCAPI} from '../../utils/apiRequest';
+import {useDispatch, useSelector} from 'react-redux';
+import {logoutUser} from '../../redux/userSlice';
+import {setLoader} from '../../redux/globalSlice';
 
 const Profile = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const {isLogin, userData} = useSelector(state => state.user);
 
   let profileListing = [
     {
@@ -47,7 +55,63 @@ const Profile = () => {
       ),
       onPress: () => navigation.navigate('ChangePassword'),
     },
+    {
+      title: 'Delete Account',
+      icon: (
+        <FontAwesome
+          name={'trash'}
+          size={RFPercentage(2.5)}
+          color={colors.textLight}
+        />
+      ),
+      onPress: () => deleteAccount(),
+    },
   ];
+
+  const deleteAccount = () => {
+    Alert.alert(
+      'Confirmation',
+      'Are you sure you want to delete your account',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: () => deleteUser(),
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+
+  const deleteUser = () => {
+    dispatch(setLoader(true));
+    WCAPI.delete(`customers/${userData?.id}`, {
+      force: true,
+    })
+      .then(response => {
+        dispatch(logoutUser());
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'success',
+          text1: 'Successfully',
+          text2: 'Your account has been successfully deleted',
+        });
+        navigation.goBack();
+      })
+      .catch(error => {
+        console.log(error.response.data);
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Oops some error occurred please try again later',
+        });
+      });
+  };
   return (
     <View style={styles.container}>
       <Header

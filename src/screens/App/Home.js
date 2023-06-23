@@ -16,17 +16,17 @@ import {useDispatch} from 'react-redux';
 import Carousel from 'react-native-snap-carousel';
 import Header from '../../components/Header';
 import HomeCard from '../../components/HomeCard';
-import endPoints from '../../constants/endPoints';
 import constant from '../../constants/constant';
 import {addToCart} from '../../redux/cartSlice';
-import {setLoader} from '../../redux/globalSlice';
+import {setAllProducts, setLoader} from '../../redux/globalSlice';
 import Images from '../../assets/images';
-import apiRequest from '../../utils/apiRequest';
+import {WCAPI} from '../../utils/apiRequest';
 
 const Home = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const [products, setProducts] = useState([]);
+  const [banners, setBanners] = useState([]);
   const [isRefresh, setIsRefresh] = useState(false);
 
   useEffect(() => {
@@ -36,12 +36,19 @@ const Home = () => {
 
   const fetchData = async () => {
     try {
-      const result = await apiRequest.get(endPoints.getProducts);
-      const mapData = await result.data?.products?.map(item => ({
+      const response = await WCAPI.get('products');
+      const mapData = await response?.map(item => ({
         ...item,
         qty: 0,
       }));
       setProducts(mapData);
+      dispatch(setAllProducts(mapData));
+
+      const filterBanners = await response
+        ?.map(item => item?.images[0]?.src)
+        .slice(0, Math.round(response?.length / 2).toFixed(0));
+      setBanners(filterBanners);
+
       dispatch(setLoader(false));
     } catch (error) {
       dispatch(setLoader(false));
@@ -97,7 +104,7 @@ const Home = () => {
                     autoplay
                     loop={5}
                     layout="stack"
-                    data={products[8]?.images}
+                    data={banners}
                     renderItem={renderBanner}
                     sliderWidth={widthPercentageToDP(93)}
                     itemWidth={widthPercentageToDP(93)}
@@ -121,11 +128,17 @@ const Home = () => {
                       onPress={() =>
                         navigation.navigate('ProductDetail', {data: item})
                       }
-                      addToCart={() => dispatch(addToCart(item))}
-                      title={item.title}
+                      addToCart={() => {
+                        if (item.attributes && item.attributes.length > 0) {
+                          navigation.navigate('ProductDetail', {data: item});
+                        } else {
+                          dispatch(addToCart({...item, qty: 1}));
+                        }
+                      }}
+                      title={item.name}
                       description={item.description}
                       price={item.price}
-                      image={item?.thumbnail}
+                      image={item?.images[0]?.src}
                     />
                   </View>
                 </View>

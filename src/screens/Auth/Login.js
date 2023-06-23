@@ -3,8 +3,16 @@ import {
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
 import {Formik} from 'formik';
+import axios from 'axios';
 import * as Yup from 'yup';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Toast from 'react-native-toast-message';
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import React from 'react';
 import {useNavigation} from '@react-navigation/native';
@@ -15,24 +23,88 @@ import DividerHorizontal from '../../components/DividerHorizontal';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import Header from '../../components/Header';
 import PrimaryButton from '../../components/PrimaryButton';
+import endPoints from '../../constants/endPoints';
+import {useDispatch} from 'react-redux';
+import {setLoader} from '../../redux/globalSlice';
+import {WCAPI} from '../../utils/apiRequest';
+import {setUser} from '../../redux/userSlice';
 
 const Login = props => {
+  const dispatch = useDispatch();
   const navigation = useNavigation();
 
   const SignInSchema = Yup.object().shape({
-    email: Yup.string()
-      .email('Email address is not valid')
-      .required('Email address is required')
-      .matches(
-        /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-        'Email address is not valid',
-      ),
+    username: Yup.string().required('Please enter your user name'),
     password: Yup.string()
       .required('Password is required')
       .min(8, 'Password must be 8 character long'),
   });
 
-  const signIn = () => {};
+  const signIn = value => {
+    dispatch(setLoader(true));
+    let payload = {
+      username: value.username,
+      password: value.password,
+    };
+
+    axios
+      .post('https://demowebsite.click/meat/wp-json/jwt-auth/v1/token', payload)
+      .then(response => {
+        console.log('hello', response.data);
+
+        axios
+          .post(
+            'https://demowebsite.click/meat/wp-json/jwt-auth/v1/token/validate',
+            {},
+            {
+              headers: {
+                Authorization: 'Bearer' + response.data.token,
+              },
+            },
+          )
+          .then(response => {
+            console.log('token ==>', response.data.data.id);
+            WCAPI.get('customers/' + response.data.data.id)
+              .then(response => {
+                console.log('customers ==>', response);
+                dispatch(setUser(response));
+                dispatch(setLoader(false));
+                navigation.goBack();
+                Toast.show({
+                  type: 'success',
+                  text1: 'Successfully Login',
+                });
+              })
+              .catch(error => {
+                console.log(error.response.data);
+                dispatch(setLoader(false));
+                Toast.show({
+                  type: 'error',
+                  text1: 'Error',
+                  text2: 'Oops some error occurred please try again later',
+                });
+              });
+          })
+          .catch(er => {
+            console.log(er);
+            dispatch(setLoader(false));
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Oops some error occurred please try again later',
+            });
+          });
+      })
+      .catch(error => {
+        console.log('error', error.response);
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Oops some error occurred please try again later',
+        });
+      });
+  };
 
   return (
     <>
@@ -44,7 +116,7 @@ const Login = props => {
       <View style={styles.container}>
         <Formik
           initialValues={{
-            email: '',
+            username: '',
             password: '',
           }}
           onSubmit={value => {
@@ -64,17 +136,17 @@ const Login = props => {
               <Text style={styles.title}>Login</Text>
               <DividerHorizontal h={0.3} />
               <Input
-                title={'Email'}
-                placeholderText={'Enter your email'}
-                value={values.email}
-                handleOnChangeTxt={handleChange('email')}
-                onBlur={() => setFieldTouched('email')}
+                title={'User Name'}
+                placeholderText={'Enter your user name'}
+                value={values.username}
+                handleOnChangeTxt={handleChange('username')}
+                onBlur={() => setFieldTouched('username')}
                 keyboardType={'email-address'}
-                error={touched.email && errors.email}
+                error={touched.username && errors.username}
                 marginTop={heightPercentageToDP(3)}
               />
-              {touched.email && errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
+              {touched.username && errors.username && (
+                <Text style={styles.errorText}>{errors.username}</Text>
               )}
               <Input
                 title={'password'}

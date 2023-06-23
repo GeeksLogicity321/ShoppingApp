@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback} from 'react';
+import React from 'react';
 import Header from '../../components/Header';
 import {useNavigation} from '@react-navigation/native';
 import {
@@ -22,29 +22,6 @@ const OrderDetail = props => {
   const navigation = useNavigation();
   const {data} = props.route.params;
 
-  const renderFooterComponent = useCallback(() => {
-    return (
-      <View style={styles.footerWrapper}>
-        <View style={styles.bottomInner}>
-          <View>
-            <Text style={[styles.mediumText, {textAlign: 'left'}]}>Qty: </Text>
-            <Text style={[styles.boldText, {textAlign: 'left'}]}>
-              Total Amount:
-            </Text>
-          </View>
-          <View>
-            <Text style={[styles.mediumText, {textAlign: 'right'}]}>
-              x{data.quantity}
-            </Text>
-            <Text style={[styles.boldText, {textAlign: 'right'}]}>
-              {constant.currency}
-              {data?.totalPrice}
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
-  }, [data]);
   return (
     <View style={styles.container}>
       <Header
@@ -70,7 +47,7 @@ const OrderDetail = props => {
             ListFooterComponent={() => (
               <View style={{height: heightPercentageToDP(20)}} />
             )}
-            renderItem={({item, index}) => (
+            renderItem={({item}) => (
               <View style={styles.cardWrapper}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -80,11 +57,11 @@ const OrderDetail = props => {
                   <Image
                     resizeMode="cover"
                     style={styles.image}
-                    source={{uri: item.thumbnail}}
+                    source={{uri: item.images[0].src}}
                   />
                 </TouchableOpacity>
                 <View style={{marginLeft: widthPercentageToDP(4)}}>
-                  <Text style={styles.title}>{item.title}</Text>
+                  <Text style={styles.title}>{item.name}</Text>
                   <Text numberOfLines={2} style={styles.description}>
                     {item.description}
                   </Text>

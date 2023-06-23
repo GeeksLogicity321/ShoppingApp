@@ -17,6 +17,7 @@ const HomeCard = ({title, description, price, image, onPress, addToCart}) => {
       style={styles.container}>
       {image ? (
         <Image
+          resizeMode="stretch"
           source={{uri: image}}
           style={{width: '100%', height: heightPercentageToDP(20)}}
         />
@@ -33,9 +34,11 @@ const HomeCard = ({title, description, price, image, onPress, addToCart}) => {
         <Text numberOfLines={2} style={styles.title}>
           {title}
         </Text>
-        <Text numberOfLines={2} style={styles.description}>
-          {description}
-        </Text>
+        {description && (
+          <Text numberOfLines={2} style={styles.description}>
+            {description}
+          </Text>
+        )}
         <View style={styles.bottomTextContainer}>
           <Text style={styles.price}>{`${constant.currency}. ${price}`}</Text>
           <TouchableOpacity activeOpacity={0.5} onPress={addToCart}>

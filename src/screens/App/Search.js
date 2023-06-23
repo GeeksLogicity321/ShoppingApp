@@ -10,54 +10,33 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import Header from '../../components/Header';
 import {useNavigation} from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/dist/Feather';
+import AntDesign from 'react-native-vector-icons/dist/AntDesign';
 import colors from '../../constants/colors';
-import endPoints from '../../constants/endPoints';
-import {setLoader} from '../../redux/globalSlice';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {addToCart} from '../../redux/cartSlice';
 import HomeCard from '../../components/HomeCard';
 import {RFPercentage} from 'react-native-responsive-fontsize';
-import apiRequest from '../../utils/apiRequest';
 
 const Search = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+  const products = useSelector(state => state.globalState.allProducts);
+  const [searchData, setSearchData] = useState([]);
   const [text, setText] = useState('');
-  const [products, setProducts] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    dispatch(setLoader(true));
-    try {
-      const result = await apiRequest.get(endPoints.getProducts);
-      const mapData = await result.data?.products?.map(item => ({
-        ...item,
-        qty: 0,
-      }));
-      setProducts(mapData);
-      dispatch(setLoader(false));
-    } catch (error) {
-      dispatch(setLoader(false));
-    }
-  };
-
-  const searching = () => {
+  const searching = value => {
     let cloneArr = [...products];
-    setIsSearching(true);
-    // if (text.length > 0) {
-    //   let filterData = cloneArr.filter(
-    //     x => x.title.toLowerCase() == text.toLowerCase(),
-    //   );
-    //   setProducts(filterData);
-    // }
+    if (text.length > 0) {
+      const filteredResults = cloneArr.filter(item =>
+        item.name.toLowerCase().includes(value.toLowerCase()),
+      );
+      setSearchData(filteredResults);
+    }
+    setText(value);
   };
 
   return (
@@ -74,20 +53,32 @@ const Search = () => {
             value={text}
             autoCapitalize="none"
             placeholder="Search..."
-            onChangeText={text => setText(text)}
+            onChangeText={text => searching(text)}
             placeholderTextColor={colors.textLight}
           />
-          <TouchableOpacity activeOpacity={0.7} onPress={() => searching()}>
-            <Feather
-              name={'search'}
-              size={RFPercentage(2.5)}
-              color={colors.textLight}
-            />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              if (text.length > 0) setText('');
+            }}>
+            {text.length > 0 ? (
+              <AntDesign
+                name={'close'}
+                size={RFPercentage(2.5)}
+                color={colors.textLight}
+              />
+            ) : (
+              <Feather
+                name={'search'}
+                size={RFPercentage(2.5)}
+                color={colors.textLight}
+              />
+            )}
           </TouchableOpacity>
         </View>
         <View style={styles.productContainer}>
           <FlatList
-            data={isSearching ? products : []}
+            data={searchData}
             numColumns={2}
             initialNumToRender={10}
             showsVerticalScrollIndicator={false}
@@ -102,11 +93,17 @@ const Search = () => {
                       onPress={() =>
                         navigation.navigate('ProductDetail', {data: item})
                       }
-                      addToCart={() => dispatch(addToCart(item))}
-                      title={item.title}
+                      addToCart={() => {
+                        if (item.attributes && item.attributes.length > 0) {
+                          navigation.navigate('ProductDetail', {data: item});
+                        } else {
+                          dispatch(addToCart({...item, qty: 1}));
+                        }
+                      }}
+                      title={item.name}
                       description={item.description}
                       price={item.price}
-                      image={item?.images[0]}
+                      image={item?.images[0].src}
                     />
                   </View>
                 </View>

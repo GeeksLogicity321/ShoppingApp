@@ -29,7 +29,7 @@ export default SecondaryButton;
 
 const styles = StyleSheet.create({
   bottomButton: {
-    width:"100%",
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -39,11 +39,19 @@ const styles = StyleSheet.create({
     marginBottom: heightPercentageToDP(1),
     marginTop: heightPercentageToDP(2),
     borderRadius: widthPercentageToDP(2),
+    shadowColor: '#afafaf',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   bottomButtonText: {
     marginLeft: widthPercentageToDP(1),
     fontSize: fontsSize.lg1,
     fontFamily: fontsFamily.bold,
-    color: 'white',
+    color: colors.onPrimary,
   },
 });

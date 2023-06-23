@@ -1,5 +1,6 @@
 import axios from 'axios';
 import endPoints from '../constants/endPoints';
+import WooCommerceAPI from 'react-native-woocommerce-api';
 
 // setup base thing
 const apiRequest = axios.create({
@@ -23,3 +24,14 @@ apiRequest.interceptors.response.use(
 );
 
 export default apiRequest;
+
+// For Wordpress Rest Api
+export const WCAPI = new WooCommerceAPI({
+  url: endPoints.baseUrl,
+  ssl: true,
+  consumerKey: endPoints.consumerKey,
+  consumerSecret: endPoints.consumerSecret,
+  wpAPI: true, // Enable the WP REST API integration
+  version: endPoints.version, // WooCommerce WP REST API version
+  queryStringAuth: true,
+});

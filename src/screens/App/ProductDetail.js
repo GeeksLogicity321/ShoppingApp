@@ -11,6 +11,7 @@ import {
   Text,
   View,
   Dimensions,
+  FlatList,
 } from 'react-native';
 import React, {useEffect, useCallback, useState} from 'react';
 import FontAwesome5 from 'react-native-vector-icons/dist/FontAwesome5';
@@ -27,25 +28,32 @@ import {addToCart} from '../../redux/cartSlice';
 import {setLoader} from '../../redux/globalSlice';
 const {width, height} = Dimensions.get('window');
 
-const static_sizes = ['Small', 'Medium', 'large', 'Extra Large'];
-const static_colors = [
-  'Red',
-  'Blue',
-  'Orange',
-  'Purple',
-  'Green',
-  'white',
-  'Black',
-  'Magenta',
-];
-
 const ProductDetail = props => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {data} = props.route.params;
-  const [selectSize, setSelectSize] = useState(static_sizes[0]);
-  const [selectColor, setSelectColor] = useState(static_colors[0]);
   const [quantity, setQuantity] = useState(1);
+  const [seletedAttributes, setSeletedAttributes] = useState({});
+
+  useEffect(() => {
+    if (!!data?.attributes) {
+      let obj = {};
+      data?.attributes?.map(item => {
+        item.options.map((option, index) => {
+          if (index === 0) {
+            obj[item?.name] = option;
+          }
+        });
+      });
+      setSeletedAttributes(obj);
+    }
+  }, [data]);
+
+  const selectOption = (value, option) => {
+    let cloneObj = {...seletedAttributes};
+    cloneObj[value] = option;
+    setSeletedAttributes(cloneObj);
+  };
 
   const onAddToCart = () => {
     dispatch(setLoader(true));
@@ -53,10 +61,7 @@ const ProductDetail = props => {
       addToCart({
         ...data,
         qty: quantity,
-        attributes: {
-          color: selectColor ? selectColor : '',
-          size: selectSize ? selectSize : '',
-        },
+        attributes: seletedAttributes ? seletedAttributes : {},
       }),
     );
     setTimeout(() => {
@@ -91,15 +96,15 @@ const ProductDetail = props => {
     <>
       <View style={styles.container}>
         <SafeAreaView>
+          <Header
+            isBack
+            isCart
+            onLeftPress={() => navigation.goBack()}
+            onRightPress={() =>
+              navigation.navigate('Cart', {from: 'ProductDetail'})
+            }
+          />
           <ScrollView contentContainerStyle={{paddingBottom: height * 0.09}}>
-            <Header
-              isBack
-              isCart
-              onLeftPress={() => navigation.goBack()}
-              onRightPress={() =>
-                navigation.navigate('Cart', {from: 'ProductDetail'})
-              }
-            />
             <View>
               <View style={styles.bannerContainer}>
                 {data.images && data.images.length > 0 ? (
@@ -107,7 +112,7 @@ const ProductDetail = props => {
                     autoplay
                     loop={5}
                     layout="stack"
-                    data={data.images}
+                    data={[data.images[0]?.src]}
                     renderItem={renderBanner}
                     sliderWidth={widthPercentageToDP(93)}
                     itemWidth={widthPercentageToDP(93)}
@@ -123,77 +128,50 @@ const ProductDetail = props => {
                 )}
               </View>
               <View style={styles.textContainer}>
-                <Text style={styles.title}>{data?.title}</Text>
-                <Text style={styles.description}>{data?.description}</Text>
-                <Text
-                  style={
-                    styles.price
-                  }>{`${constant.currency}. ${data?.price}`}</Text>
+                <Text style={styles.title}>{data?.name}</Text>
+                {data?.description && (
+                  <Text style={styles.description}>{data?.description}</Text>
+                )}
+                <Text style={styles.price}>
+                  {constant.currency}.{' '}
+                  {parseInt(data?.price).toLocaleString('en-US')}
+                </Text>
               </View>
               <DividerHorizontal w="90%" />
               <View style={styles.attributesContainer}>
-                <View style={styles.attributesBox}>
-                  <Text style={styles.attributesTitle}>Sizes</Text>
-                  <View style={styles.innerBox}>
-                    {static_sizes.map(item => {
-                      return (
-                        <Pressable
-                          onPress={() => setSelectSize(item)}
-                          style={[
-                            styles.selectAttributes,
-                            {
-                              backgroundColor:
-                                selectSize === item ? colors.primary : 'white',
-                            },
-                          ]}>
-                          <Text
-                            style={[
-                              styles.attributesText,
-                              {
-                                color:
-                                  selectSize === item
-                                    ? 'white'
-                                    : colors.textLight,
-                              },
-                            ]}>
-                            {item}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
-                <View style={styles.attributesBox}>
-                  <Text style={styles.attributesTitle}>Colors</Text>
-                  <View style={styles.innerBox}>
-                    {static_colors.map(item => {
-                      return (
-                        <Pressable
-                          onPress={() => setSelectColor(item)}
-                          style={[
-                            styles.selectAttributes,
-                            {
-                              backgroundColor:
-                                selectColor === item ? colors.primary : 'white',
-                            },
-                          ]}>
-                          <Text
-                            style={[
-                              styles.attributesText,
-                              {
-                                color:
-                                  selectColor === item
-                                    ? 'white'
-                                    : colors.textLight,
-                              },
-                            ]}>
-                            {item}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                </View>
+                <FlatList
+                  data={data?.attributes}
+                  ListFooterComponent={() => (
+                    <View style={{height: heightPercentageToDP(10)}} />
+                  )}
+                  renderItem={({item}) => {
+                    return (
+                      <View style={styles.attributesBox}>
+                        <Text style={styles.attributesTitle}>{item.name}</Text>
+                        <View style={styles.innerBox}>
+                          {item?.options?.map(option => {
+                            return (
+                              <Pressable
+                                onPress={() => selectOption(item?.name, option)}
+                                style={styles.selectAttributes(
+                                  seletedAttributes[item?.name],
+                                  option,
+                                )}>
+                                <Text
+                                  style={styles.attributesText(
+                                    seletedAttributes[item?.name],
+                                    option,
+                                  )}>
+                                  {option}
+                                </Text>
+                              </Pressable>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    );
+                  }}
+                />
               </View>
             </View>
           </ScrollView>
@@ -308,7 +286,7 @@ const styles = StyleSheet.create({
     marginTop: heightPercentageToDP(0.5),
     flexWrap: 'wrap',
   },
-  selectAttributes: {
+  selectAttributes: (isSelected, option) => ({
     paddingHorizontal: widthPercentageToDP(4),
     paddingVertical: widthPercentageToDP(2),
     borderWidth: 0.5,
@@ -316,12 +294,13 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     marginRight: widthPercentageToDP(2),
     marginTop: heightPercentageToDP(1),
-  },
-  attributesText: {
+    backgroundColor: isSelected === option ? colors.primary : 'white',
+  }),
+  attributesText: (isSelected, option) => ({
     fontFamily: fontsFamily.semibold,
     fontSize: fontsSize.md1,
-    color: colors.textLight,
-  },
+    color: isSelected === option ? 'white' : colors.textLight,
+  }),
   qtyButton: {
     backgroundColor: '#bbbbbb',
     width: widthPercentageToDP(10),
