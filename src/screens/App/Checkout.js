@@ -24,12 +24,15 @@ import {setLoader} from '../../redux/globalSlice';
 import {setOrderHistory} from '../../redux/orderSlice';
 import SimpleModal from '../../components/SimpleModal';
 import Alert from '../../components/Alert';
+import {WCAPI} from '../../utils/apiRequest';
+import {emptyCart} from '../../redux/cartSlice';
 
 const Checkout = () => {
   const generateOrderId = useId();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const cartData = useSelector(state => state.cart);
+  const {isLogin, userData} = useSelector(state => state.user);
 
   const [address, setAddress] = useState('');
   const [contactNo, setContactNo] = useState('');
@@ -49,32 +52,60 @@ const Checkout = () => {
 
   const checkout = () => {
     dispatch(setLoader(true));
-    if (address && contactNo) {
-      let payload = {
-        time: new Date(),
-        orderId: generateOrderId + (Math.random() * 100 * 1000).toFixed(0),
-        deliveryAddress: address,
-        contactNumber: contactNo,
-        totalPrice: price.amount,
-        quantity: price.qty,
-        paymentType: isCod ? 'Cash On Delivery' : 'Online Payment',
-        cartData,
-      };
-
-      setPayload(payload);
-
-      setIsCheckoutModal(true);
-      dispatch(setLoader(false));
-      setTimeout(() => {
-        dispatch(setOrderHistory(payload));
+    let cartMapped = cartData.map(item => ({
+      product_id: item.id,
+      quantity: item.qty,
+    }));
+    if (isLogin) {
+      if (address && contactNo) {
+        let payload = {
+          payment_method: '',
+          payment_method_title: '',
+          set_paid: true,
+          billing: {
+            first_name: userData?.first_name,
+            last_name: userData?.last_name,
+            address_1: address,
+            email: userData?.email,
+            phone: contactNo,
+          },
+          shipping: {
+            first_name: userData?.first_name,
+            last_name: userData?.last_name,
+            address_1: address,
+            address_2: address,
+          },
+          line_items: cartMapped,
+        };
+        WCAPI.post('orders', payload)
+          .then(response => {
+            setPayload(response);
+            setIsCheckoutModal(true);
+            dispatch(setLoader(false));
+            dispatch(emptyCart());
+          })
+          .catch(error => {
+            console.log(error.response.data);
+            dispatch(setLoader(false));
+            Toast.show({
+              type: 'error',
+              text1: 'Oops order placed some issues please try again later',
+            });
+          });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Please fill the field',
+        });
         dispatch(setLoader(false));
-      }, 2000);
+      }
     } else {
+      dispatch(setLoader(false));
       Toast.show({
         type: 'error',
-        text1: 'Please fill the field',
+        text1: 'Please login for placed your order',
       });
-      dispatch(setLoader(false));
+      navigation.navigate('Login');
     }
   };
 

@@ -1,4 +1,8 @@
 import {
+  heightPercentageToDP,
+  widthPercentageToDP,
+} from 'react-native-responsive-screen';
+import {
   FlatList,
   Image,
   ScrollView,
@@ -7,13 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import moment from 'moment';
+import React, {useMemo} from 'react';
 import Header from '../../components/Header';
 import {useNavigation} from '@react-navigation/native';
-import {
-  heightPercentageToDP,
-  widthPercentageToDP,
-} from 'react-native-responsive-screen';
 import {fontsFamily, fontsSize} from '../../constants/fonts';
 import colors from '../../constants/colors';
 import constant from '../../constants/constant';
@@ -21,6 +22,14 @@ import constant from '../../constants/constant';
 const OrderDetail = props => {
   const navigation = useNavigation();
   const {data} = props.route.params;
+
+  const calculateQty = useMemo(() => {
+    let qty = 0;
+    data.line_items.map(x => {
+      qty += x.quantity;
+    });
+    return qty;
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -33,60 +42,66 @@ const OrderDetail = props => {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.wrapper}>
           <Text style={styles.lightText}>Order Id</Text>
-          <Text style={styles.boldText}>{data.orderId}</Text>
+          <Text style={styles.boldText}>{data?.order_key}</Text>
           <Text style={styles.lightText}>Deliver to</Text>
-          <Text style={styles.boldText}>{data.deliveryAddress}</Text>
+          <Text style={styles.boldText}>{data?.shipping?.address_1}</Text>
           <Text style={styles.lightText}>Payment Type</Text>
-          <Text style={styles.boldText}>{data.paymentType}</Text>
+          <Text style={styles.boldText}>{data?.payment_method_title}</Text>
+          <Text style={styles.lightText}>Date & Time</Text>
+          <Text style={styles.boldText}>
+            {moment(data?.date_created).format('MM-DD-YY hh:mm A')}
+          </Text>
 
           <FlatList
-            data={data?.cartData}
+            data={data?.line_items}
             initialNumToRender={10}
             showsVerticalScrollIndicator={false}
             keyExtractor={({_, index}) => index?.toString()}
             ListFooterComponent={() => (
               <View style={{height: heightPercentageToDP(20)}} />
             )}
-            renderItem={({item}) => (
-              <View style={styles.cardWrapper}>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() =>
-                    navigation.navigate('ImageView', {data: item.images})
-                  }>
-                  <Image
-                    resizeMode="cover"
-                    style={styles.image}
-                    source={{uri: item.images[0].src}}
-                  />
-                </TouchableOpacity>
-                <View style={{marginLeft: widthPercentageToDP(4)}}>
-                  <Text style={styles.title}>{item.name}</Text>
-                  <Text numberOfLines={2} style={styles.description}>
-                    {item.description}
-                  </Text>
-                  <View style={{marginTop: heightPercentageToDP(0.5)}}>
-                    {item.attributes &&
-                      Object.entries(item.attributes).map(([key, value]) => {
-                        return (
-                          <Text style={styles.attributes}>
-                            {key} - {value}
-                          </Text>
-                        );
-                      })}
-                  </View>
-                  <View style={styles.bottom}>
-                    <Text style={styles.price}>
-                      {constant.currency}.{' '}
-                      {parseInt(item.price).toLocaleString('en-US')}
-                      <Text style={styles.qty}>
-                        {'  '}X{item.qty}
-                      </Text>
+            renderItem={({item}) => {
+              return (
+                <View style={styles.cardWrapper}>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() =>
+                      navigation.navigate('ImageView', {data: item?.image?.src})
+                    }>
+                    <Image
+                      resizeMode="cover"
+                      style={styles.image}
+                      source={{uri: item?.image?.src}}
+                    />
+                  </TouchableOpacity>
+                  <View style={{marginLeft: widthPercentageToDP(4)}}>
+                    <Text style={styles.title}>{item?.name}</Text>
+                    <Text numberOfLines={2} style={styles.description}>
+                      {item?.description}
                     </Text>
+                    <View style={{marginTop: heightPercentageToDP(0.5)}}>
+                      {item.attributes &&
+                        Object.entries(item.attributes).map(([key, value]) => {
+                          return (
+                            <Text style={styles.attributes}>
+                              {key} - {value}
+                            </Text>
+                          );
+                        })}
+                    </View>
+                    <View style={styles.bottom}>
+                      <Text style={styles.price}>
+                        {constant.currency}.{' '}
+                        {parseInt(item?.price).toLocaleString('en-US')}
+                        <Text style={styles.qty}>
+                          {'  '}X{item?.quantity}
+                        </Text>
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            )}
+              );
+            }}
           />
         </View>
       </ScrollView>
@@ -100,12 +115,12 @@ const OrderDetail = props => {
           </View>
           <View>
             <Text style={[styles.mediumText, {textAlign: 'right'}]}>
-              x{data.quantity}
+              x{calculateQty}
             </Text>
             <Text style={[styles.boldText, {textAlign: 'right'}]}>
               {constant.currency}
               {'. '}
-              {parseInt(data?.totalPrice).toLocaleString('en-US')}
+              {parseInt(data?.total).toLocaleString('en-US')}
             </Text>
           </View>
         </View>

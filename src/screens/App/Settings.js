@@ -32,7 +32,6 @@ const Settings = props => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const {isLogin} = useSelector(state => state.user);
-  const order = useSelector(state => state.order);
 
   const logout = () => {
     Alert.alert(
@@ -72,7 +71,7 @@ const Settings = props => {
       onPress: () => navigation.navigate('Profile'),
     },
     {
-      title: order.length > 0 ? 'Orders ( ' + order.length + ' )' : 'Orders',
+      title: 'Orders',
       icon: (
         <Ionicons
           name={'ios-time-sharp'}
