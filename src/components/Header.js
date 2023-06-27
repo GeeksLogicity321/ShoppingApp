@@ -17,11 +17,13 @@ const Header = ({
   title,
   onLeftPress,
   onRightPress,
+  onFilter,
   isCart = false,
   isBack = false,
   isRightIcon = true,
   isLeftIcon = true,
   leftTitle = false,
+  isFilter = false,
 }) => {
   const cartData = useSelector(state => state.cart);
   return (
@@ -47,23 +49,43 @@ const Header = ({
       <Text numberOfLines={1} style={styles.title}>
         {title}
       </Text>
-      {isRightIcon && (
-        <Pressable onPress={onRightPress}>
+      {isRightIcon && !isFilter && (
+        <Pressable onPress={onRightPress} style={{width: '20%'}}>
           {isCart && cartData.length > 0 && (
             <View style={styles.badgeCount}>
               <Text style={styles.count}>{cartData.length}</Text>
             </View>
           )}
           {!isCart ? (
-            <Feather name="search" size={RFPercentage(2.5)} color={'grey'} />
+            <View style={{alignSelf: 'flex-end'}}>
+              <Feather name="search" size={RFPercentage(2.5)} color={'grey'} />
+            </View>
           ) : (
-            <MaterialCommunityIcons
-              name="cart"
-              size={RFPercentage(2.5)}
-              color={'grey'}
-            />
+            <View style={{alignSelf: 'flex-end'}}>
+              <MaterialCommunityIcons
+                name="cart"
+                size={RFPercentage(2.5)}
+                color={'grey'}
+              />
+            </View>
           )}
         </Pressable>
+      )}
+      {isRightIcon && isFilter && (
+        <View style={styles.selfEnd}>
+          <View style={styles.rowDirectionEnd}>
+            <Pressable onPress={onFilter}>
+              <MaterialCommunityIcons
+                name="filter"
+                size={RFPercentage(2.5)}
+                color={'grey'}
+              />
+            </Pressable>
+            <Pressable onPress={onRightPress} style={styles.searchIc}>
+              <Feather name="search" size={RFPercentage(2.5)} color={'grey'} />
+            </Pressable>
+          </View>
+        </View>
       )}
     </View>
   );
@@ -74,18 +96,18 @@ export default Header;
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    // height: heightPercentageToDP(6),
     backgroundColor: 'white',
     flexDirection: 'row',
     padding: widthPercentageToDP(3),
     borderBottomColor: 'grey',
     borderBottomWidth: 0.3,
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   left: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-end',
+    width: '20%',
   },
   title: {
     textAlign: 'center',
@@ -93,6 +115,8 @@ const styles = StyleSheet.create({
     fontSize: fontsSize.md2,
     width: widthPercentageToDP(70),
     color: colors.primary,
+    alignSelf: 'center',
+    width: '60%',
   },
   leftTitle: {
     textAlign: 'left',
@@ -117,5 +141,18 @@ const styles = StyleSheet.create({
     fontFamily: fontsFamily.semibold,
     fontSize: fontsSize.sm1,
     color: 'white',
+  },
+  selfEnd: {
+    width: '20%',
+    alignSelf: 'flex-end',
+  },
+  rowDirectionEnd: {
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+  },
+  searchIc: {
+    marginLeft: widthPercentageToDP(2),
+    alignSelf: 'flex-end',
   },
 });

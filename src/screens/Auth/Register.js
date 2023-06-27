@@ -76,7 +76,7 @@ const Register = props => {
         if (response?.data?.status === 400) {
           dispatch(setLoader(false));
           setErrorModal(true);
-          setError({title: 'Error', msg: response?.message});
+          setError({title: 'error', msg: response?.message});
         } else {
           Toast.show({
             type: 'success',
@@ -91,6 +91,8 @@ const Register = props => {
       .catch(error => {
         console.log(error.response);
         dispatch(setLoader(false));
+        setErrorModal(true);
+        setError({title: 'error', msg: error.response.data.message});
       });
   };
 
@@ -238,17 +240,13 @@ const Register = props => {
           <View style={{height: heightPercentageToDP(10)}} />
         </ScrollView>
       </View>
-      <SimpleModal isVisible={errorModal} onClose={() => setErrorModal(false)}>
+      <SimpleModal
+        type={error.title}
+        isVisible={errorModal}
+        onClose={() => setErrorModal(false)}>
         <Alert
           heading={error.title}
           message={error.msg}
-          icon={
-            <MaterialIcons
-              name={'error-outline'}
-              size={RFPercentage(10)}
-              color={colors.danger}
-            />
-          }
           buttonText={'Cancel'}
           onPress={() => setErrorModal(false)}
         />

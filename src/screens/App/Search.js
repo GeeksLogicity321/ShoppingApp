@@ -10,33 +10,52 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Header from '../../components/Header';
 import {useNavigation} from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/dist/Feather';
 import AntDesign from 'react-native-vector-icons/dist/AntDesign';
 import colors from '../../constants/colors';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {addToCart} from '../../redux/cartSlice';
 import HomeCard from '../../components/HomeCard';
 import {RFPercentage} from 'react-native-responsive-fontsize';
+import {setLoader} from '../../redux/globalSlice';
+import {WCAPI} from '../../utils/apiRequest';
 
 const Search = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const products = useSelector(state => state.globalState.allProducts);
   const [searchData, setSearchData] = useState([]);
+  const [products, setProducts] = useState([]);
   const [text, setText] = useState('');
+  const [touch, setTouch] = useState(false);
+
+  useEffect(() => {
+    dispatch(setLoader(true));
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await WCAPI.get('products');
+      const mapData = await response?.map(item => ({
+        ...item,
+        qty: 0,
+      }));
+      setProducts(mapData);
+      dispatch(setLoader(false));
+    } catch (error) {
+      dispatch(setLoader(false));
+    }
+  };
 
   const searching = value => {
-    let cloneArr = [...products];
-    if (text.length > 0) {
-      const filteredResults = cloneArr.filter(item =>
-        item.name.toLowerCase().includes(value.toLowerCase()),
-      );
-      setSearchData(filteredResults);
-    }
     setText(value);
+    let data = products.filter(item =>
+      item.name.toLowerCase().includes(value.toLowerCase()),
+    );
+    setSearchData(data);
   };
 
   return (
@@ -48,9 +67,11 @@ const Search = () => {
           onRightPress={() => navigation.navigate('Cart', {from: 'Search'})}
           onLeftPress={() => navigation.goBack()}
         />
-        <View style={styles.searchBar}>
+        <View style={styles.searchBar(touch)}>
           <TextInput
             value={text}
+            onFocus={() => setTouch(true)}
+            onBlur={() => setTouch(false)}
             autoCapitalize="none"
             placeholder="Search..."
             onChangeText={text => searching(text)}
@@ -122,13 +143,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  searchBar: {
+  searchBar: touch => ({
     width: '93%',
     alignSelf: 'center',
-    borderColor: 'grey',
-    borderWidth: 0.3,
+    borderColor: touch ? colors.primary : 'grey',
+    borderWidth: 0.5,
     justifyContent: 'center',
-    backgroundColor: '#b4b4b48f',
+    backgroundColor: '#fff',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -137,7 +158,7 @@ const styles = StyleSheet.create({
     borderRadius: widthPercentageToDP(4),
     height: heightPercentageToDP(5),
     paddingHorizontal: widthPercentageToDP(4),
-  },
+  }),
   productContainer: {
     width: '100%',
   },

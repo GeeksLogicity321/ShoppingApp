@@ -3,12 +3,15 @@ import {
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
 import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import * as Animatable from 'react-native-animatable';
+import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import AntDesign from 'react-native-vector-icons/dist/AntDesign';
+import MaterialIcons from 'react-native-vector-icons/dist/MaterialIcons';
 import React from 'react';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import colors from '../constants/colors';
 
-const SimpleModal = ({isVisible, onClose, children}) => {
+const SimpleModal = ({isVisible, onClose, children, type}) => {
   return (
     <Modal animationType="fade" visible={isVisible} transparent>
       <View style={styles.container}>
@@ -23,6 +26,30 @@ const SimpleModal = ({isVisible, onClose, children}) => {
               color={colors.textLight}
             />
           </TouchableOpacity>
+          {type && type !== '' && type === 'success' ? (
+            <Animatable.View
+              style={styles.selfCenter}
+              animation={'bounceIn'}
+              duration={2000}>
+              <Ionicons
+                name={'checkmark-done-circle-outline'}
+                size={RFPercentage(10)}
+                color={colors.success}
+              />
+            </Animatable.View>
+          ) : type && type !== '' && type === 'error' ? (
+            <Animatable.View
+              style={styles.selfCenter}
+              animation={'bounceIn'}
+              duration={2000}>
+              <MaterialIcons
+                name={'error-outline'}
+                size={RFPercentage(10)}
+                color={colors.danger}
+              />
+            </Animatable.View>
+          ) : null}
+
           {children}
         </View>
       </View>
@@ -57,5 +84,8 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     alignSelf: 'flex-end',
+  },
+  selfCenter: {
+    alignSelf: 'center',
   },
 });

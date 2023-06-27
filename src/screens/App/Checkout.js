@@ -9,9 +9,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, {useState, useMemo, useId} from 'react';
+import React, {useState, useMemo} from 'react';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
+import FontAwesome5 from 'react-native-vector-icons/dist/FontAwesome5';
+import Fontisto from 'react-native-vector-icons/dist/Fontisto';
 import {useNavigation} from '@react-navigation/native';
 import Header from '../../components/Header';
 import Input from '../../components/Input';
@@ -21,21 +23,21 @@ import colors from '../../constants/colors';
 import {useDispatch, useSelector} from 'react-redux';
 import SecondaryButton from '../../components/SecondaryButton';
 import {setLoader} from '../../redux/globalSlice';
-import {setOrderHistory} from '../../redux/orderSlice';
 import SimpleModal from '../../components/SimpleModal';
 import Alert from '../../components/Alert';
 import {WCAPI} from '../../utils/apiRequest';
 import {emptyCart} from '../../redux/cartSlice';
+import AddressCard from '../../components/AddressCard';
 
 const Checkout = () => {
-  const generateOrderId = useId();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const cartData = useSelector(state => state.cart);
   const {isLogin, userData} = useSelector(state => state.user);
 
-  const [address, setAddress] = useState('');
-  const [contactNo, setContactNo] = useState('');
+  const [contactNo, setContactNo] = useState(
+    isLogin ? userData?.billing?.phone : '',
+  );
   const [isCod, setIsCod] = useState(true);
   const [isCheckoutModal, setIsCheckoutModal] = useState(false);
   const [payload, setPayload] = useState({});
@@ -56,56 +58,46 @@ const Checkout = () => {
       product_id: item.id,
       quantity: item.qty,
     }));
-    if (isLogin) {
-      if (address && contactNo) {
-        let payload = {
-          payment_method: '',
-          payment_method_title: '',
-          set_paid: true,
-          billing: {
-            first_name: userData?.first_name,
-            last_name: userData?.last_name,
-            address_1: address,
-            email: userData?.email,
-            phone: contactNo,
-          },
-          shipping: {
-            first_name: userData?.first_name,
-            last_name: userData?.last_name,
-            address_1: address,
-            address_2: address,
-          },
-          line_items: cartMapped,
-        };
-        WCAPI.post('orders', payload)
-          .then(response => {
-            setPayload(response);
-            setIsCheckoutModal(true);
-            dispatch(setLoader(false));
-            dispatch(emptyCart());
-          })
-          .catch(error => {
-            console.log(error.response.data);
-            dispatch(setLoader(false));
-            Toast.show({
-              type: 'error',
-              text1: 'Oops order placed some issues please try again later',
-            });
+    if (userData?.shipping?.address_1 && contactNo) {
+      let payload = {
+        payment_method: '',
+        payment_method_title: '',
+        set_paid: true,
+        billing: {
+          first_name: userData?.first_name,
+          last_name: userData?.last_name,
+          address_1: userData?.shipping?.address_1,
+          email: userData?.email,
+          phone: contactNo,
+        },
+        shipping: {
+          first_name: userData?.first_name,
+          last_name: userData?.last_name,
+          address_1: userData?.shipping?.address_1,
+        },
+        line_items: cartMapped,
+      };
+      WCAPI.post('orders', payload)
+        .then(response => {
+          setPayload(response);
+          setIsCheckoutModal(true);
+          dispatch(setLoader(false));
+          dispatch(emptyCart());
+        })
+        .catch(error => {
+          console.log(error.response.data);
+          dispatch(setLoader(false));
+          Toast.show({
+            type: 'error',
+            text1: 'Oops order placed some issues please try again later',
           });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Please fill the field',
         });
-        dispatch(setLoader(false));
-      }
     } else {
-      dispatch(setLoader(false));
       Toast.show({
         type: 'error',
-        text1: 'Please login for placed your order',
+        text1: 'Please fill the field',
       });
-      navigation.navigate('Login');
+      dispatch(setLoader(false));
     }
   };
 
@@ -124,14 +116,13 @@ const Checkout = () => {
       />
       <ScrollView>
         <View style={styles.child}>
-          <Input
-            title={'Address'}
-            placeholderText={'Please enter your full delivery address.'}
-            value={address}
-            handleOnChangeTxt={text => setAddress(text)}
-            marginTop={heightPercentageToDP(2)}
+          <AddressCard
+            address={userData?.shipping?.address_1}
+            city={userData?.shipping?.city}
+            country={userData?.shipping?.country}
+            postcode={userData?.shipping?.postcode}
+            onPress={() => navigation.navigate('Address')}
           />
-
           <Input
             title={'contact number'}
             placeholderText={'+971 XXX-XXXX'}
@@ -196,18 +187,12 @@ const Checkout = () => {
         />
       </View>
       <SimpleModal
+        type={'success'}
         isVisible={isCheckoutModal}
         onClose={() => setIsCheckoutModal(false)}>
         <Alert
           heading={'Success'}
           message={`Your order has been successfully placed if you check the order history then touch the view order button and now see your order history`}
-          icon={
-            <Ionicons
-              name={'checkmark-done-circle-outline'}
-              size={RFPercentage(10)}
-              color={colors.success}
-            />
-          }
           buttonText={'View Order History'}
           onPress={() => gotoOrderDetail()}
         />
@@ -301,5 +286,32 @@ const styles = StyleSheet.create({
     fontSize: fontsSize.lg1,
     fontFamily: fontsFamily.bold,
     color: 'white',
+  },
+  selectedAddress: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderRadius: widthPercentageToDP(2),
+    marginTop: heightPercentageToDP(2),
+    shadowColor: '#afafaf',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    paddingHorizontal: widthPercentageToDP(3),
+    paddingVertical: heightPercentageToDP(2),
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: heightPercentageToDP(1.2),
+  },
+  addressText: {
+    color: colors.textLight,
+    fontSize: fontsSize.md1,
+    fontFamily: fontsFamily.regular,
+    marginLeft: widthPercentageToDP(2),
   },
 });

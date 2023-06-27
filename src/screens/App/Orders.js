@@ -15,7 +15,7 @@ import moment from 'moment';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import Header from '../../components/Header';
 import {useNavigation} from '@react-navigation/native';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import constant from '../../constants/constant';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import colors from '../../constants/colors';
@@ -26,6 +26,7 @@ import {setLoader} from '../../redux/globalSlice';
 const Order = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+  const {isLogin, userData} = useSelector(state => state.user);
   const [orders, setOrders] = useState([]);
   const [isRefresh, setIsRefresh] = useState(false);
 
@@ -41,7 +42,7 @@ const Order = () => {
   }, []);
 
   const getOrders = () => {
-    WCAPI.get('orders')
+    WCAPI.get('orders', {customer_id: userData?.id})
       .then(response => {
         setOrders(response);
         dispatch(setLoader(false));

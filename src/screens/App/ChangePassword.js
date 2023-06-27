@@ -16,6 +16,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setUser} from '../../redux/userSlice';
 import {setLoader} from '../../redux/globalSlice';
 import {fontsFamily, fontsSize} from '../../constants/fonts';
+import {WCAPI} from '../../utils/apiRequest';
 
 const ChangePassword = () => {
   const navigation = useNavigation();
@@ -27,8 +28,8 @@ const ChangePassword = () => {
     newPassword: Yup.string()
       .min(8, 'Password must be at least 8 characters')
       .required('Please choose a password')
-      .matches(
-        userData?.password,
+      .notOneOf(
+        [Yup.ref('oldPassword')],
         'This password is matching your old password please create a different password',
       ),
     confirmPassword: Yup.string()
@@ -39,17 +40,28 @@ const ChangePassword = () => {
 
   const saveChanges = value => {
     dispatch(setLoader(true));
+
     let payload = {password: value.newPassword};
-    setTimeout(() => {
-      dispatch(setUser({...userData, ...payload}));
-      dispatch(setLoader(false));
-      Toast.show({
-        type: 'success',
-        text1: 'Successfully',
-        text2: 'Your password has been successfully changed.',
+
+    WCAPI.put(`customers/${userData?.id}`, payload)
+      .then(response => {
+        dispatch(setUser(response));
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'success',
+          text1: 'Successfully change password',
+        });
+        navigation.goBack();
+      })
+      .catch(error => {
+        console.log(error.response.data);
+        dispatch(setLoader(false));
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Oops some error occurred please try again later',
+        });
       });
-      navigation.goBack();
-    }, 2000);
   };
 
   return (

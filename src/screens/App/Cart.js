@@ -3,6 +3,7 @@ import {
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
 import React, {useMemo} from 'react';
+import Toast from 'react-native-toast-message';
 import {StyleSheet, Text, View, TouchableOpacity, FlatList} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
@@ -20,6 +21,7 @@ const Cart = props => {
   let from = props.route.params?.from;
   const navigation = useNavigation();
   const cartData = useSelector(state => state.cart);
+  const {isLogin, userData} = useSelector(state => state.user);
 
   const price = useMemo(() => {
     let amount = 0;
@@ -30,6 +32,18 @@ const Cart = props => {
     });
     return {amount, qty};
   }, [cartData]);
+
+  const gotoCheckout = () => {
+    if (isLogin) {
+      navigation.navigate('Checkout');
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Please login for placed your order',
+      });
+      navigation.navigate('Login');
+    }
+  };
 
   return (
     <>
@@ -115,7 +129,7 @@ const Cart = props => {
 
           <SecondaryButton
             text={'Address & Payment'}
-            onPress={() => navigation.navigate('Checkout')}
+            onPress={() => gotoCheckout()}
           />
         </View>
       )}
@@ -188,6 +202,7 @@ const styles = StyleSheet.create({
     fontSize: fontsSize.xxl1,
     fontFamily: fontsFamily.medium,
     marginTop: heightPercentageToDP(1),
+    color: colors.textDark,
   },
   emptyDesc: {
     textAlign: 'center',

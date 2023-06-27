@@ -5,16 +5,10 @@ import {
 import {Formik} from 'formik';
 import axios from 'axios';
 import * as Yup from 'yup';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Toast from 'react-native-toast-message';
 import MaterialCommunityIcons from 'react-native-vector-icons/dist/MaterialCommunityIcons';
-import React from 'react';
+import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import Input from '../../components/Input';
 import {fontsFamily, fontsSize} from '../../constants/fonts';
@@ -23,15 +17,20 @@ import DividerHorizontal from '../../components/DividerHorizontal';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import Header from '../../components/Header';
 import PrimaryButton from '../../components/PrimaryButton';
-import endPoints from '../../constants/endPoints';
 import {useDispatch} from 'react-redux';
 import {setLoader} from '../../redux/globalSlice';
 import {WCAPI} from '../../utils/apiRequest';
 import {setUser} from '../../redux/userSlice';
+import SimpleModal from '../../components/SimpleModal';
+import Alert from '../../components/Alert';
+import endPoints from '../../constants/endPoints';
 
 const Login = props => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
+
+  const [error, setError] = useState({title: '', msg: ''});
+  const [isVisibleModal, setIsVisibleModal] = useState(false);
 
   const SignInSchema = Yup.object().shape({
     username: Yup.string().required('Please enter your user name'),
@@ -48,13 +47,11 @@ const Login = props => {
     };
 
     axios
-      .post('https://demowebsite.click/meat/wp-json/jwt-auth/v1/token', payload)
+      .post(endPoints.getToken, payload)
       .then(response => {
-        console.log('hello', response.data);
-
         axios
           .post(
-            'https://demowebsite.click/meat/wp-json/jwt-auth/v1/token/validate',
+            endPoints.validate,
             {},
             {
               headers: {
@@ -63,10 +60,8 @@ const Login = props => {
             },
           )
           .then(response => {
-            console.log('token ==>', response.data.data.id);
             WCAPI.get('customers/' + response.data.data.id)
               .then(response => {
-                console.log('customers ==>', response);
                 dispatch(setUser(response));
                 dispatch(setLoader(false));
                 navigation.goBack();
@@ -78,31 +73,22 @@ const Login = props => {
               .catch(error => {
                 console.log(error.response.data);
                 dispatch(setLoader(false));
-                Toast.show({
-                  type: 'error',
-                  text1: 'Error',
-                  text2: 'Oops some error occurred please try again later',
-                });
+                setIsVisibleModal(true);
+                setError({title: 'error', msg: error.response.data.message});
               });
           })
           .catch(er => {
             console.log(er);
             dispatch(setLoader(false));
-            Toast.show({
-              type: 'error',
-              text1: 'Error',
-              text2: 'Oops some error occurred please try again later',
-            });
+            setIsVisibleModal(true);
+            setError({title: 'error', msg: error.response.data.message});
           });
       })
       .catch(error => {
         console.log('error', error.response);
         dispatch(setLoader(false));
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Oops some error occurred please try again later',
-        });
+        setIsVisibleModal(true);
+        setError({title: 'error', msg: error.response.data.message});
       });
   };
 
@@ -171,7 +157,8 @@ const Login = props => {
                 <DividerHorizontal w="42%" />
               </View>
 
-              <View style={styles.social}>
+              {/* <=== Socials login ===> */}
+              {/* <View style={styles.social}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={[styles.socialBtn, styles.googleBtn]}>
@@ -190,7 +177,7 @@ const Login = props => {
                     color={'#1a74e4'}
                   />
                 </TouchableOpacity>
-              </View>
+              </View> */}
 
               <Text style={styles.bottomText}>
                 Do you have an account?{' '}
@@ -204,6 +191,17 @@ const Login = props => {
           )}
         </Formik>
       </View>
+      <SimpleModal
+        onClose={() => setIsVisibleModal(false)}
+        isVisible={isVisibleModal}
+        type={error.title}>
+        <Alert
+          heading={error.title}
+          message={error.msg}
+          buttonText={'Cancel'}
+          onPress={() => setIsVisibleModal(false)}
+        />
+      </SimpleModal>
     </>
   );
 };
