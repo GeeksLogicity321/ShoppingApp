@@ -62,6 +62,7 @@ const Checkout = () => {
       let payload = {
         payment_method: '',
         payment_method_title: '',
+        customer_id: userData?.id,
         set_paid: true,
         billing: {
           first_name: userData?.first_name,

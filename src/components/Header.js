@@ -4,6 +4,7 @@ import {
   heightPercentageToDP,
   widthPercentageToDP,
 } from 'react-native-responsive-screen';
+import * as Animatable from 'react-native-animatable';
 import SimpleLineIcons from 'react-native-vector-icons/dist/SimpleLineIcons';
 import Feather from 'react-native-vector-icons/dist/Feather';
 import MaterialIcons from 'react-native-vector-icons/dist/MaterialIcons';
@@ -46,9 +47,17 @@ const Header = ({
           {leftTitle && <Text style={styles.leftTitle}>{leftTitle}</Text>}
         </Pressable>
       )}
-      <Text numberOfLines={1} style={styles.title}>
-        {title}
-      </Text>
+      <View style={styles.selfSixty}>
+        {title && (
+          <Animatable.Text
+            animation={'fadeIn'}
+            duration={1000}
+            numberOfLines={1}
+            style={styles.title}>
+            {title}
+          </Animatable.Text>
+        )}
+      </View>
       {isRightIcon && !isFilter && (
         <Pressable onPress={onRightPress} style={{width: '20%'}}>
           {isCart && cartData.length > 0 && (
@@ -113,10 +122,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fontsFamily.bold,
     fontSize: fontsSize.md2,
-    width: widthPercentageToDP(70),
     color: colors.primary,
-    alignSelf: 'center',
-    width: '60%',
   },
   leftTitle: {
     textAlign: 'left',
@@ -154,5 +160,9 @@ const styles = StyleSheet.create({
   searchIc: {
     marginLeft: widthPercentageToDP(2),
     alignSelf: 'flex-end',
+  },
+  selfSixty: {
+    alignSelf: 'center',
+    width: '60%',
   },
 });

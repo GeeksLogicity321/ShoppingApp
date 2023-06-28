@@ -34,6 +34,7 @@ const ProductDetail = props => {
   const {data} = props.route.params;
   const [quantity, setQuantity] = useState(1);
   const [seletedAttributes, setSeletedAttributes] = useState({});
+  const [titleHidden, setTitleHidden] = useState(false);
 
   useEffect(() => {
     if (!!data?.attributes) {
@@ -99,12 +100,22 @@ const ProductDetail = props => {
           <Header
             isBack
             isCart
+            title={titleHidden ? data?.name : ''}
             onLeftPress={() => navigation.goBack()}
             onRightPress={() =>
               navigation.navigate('Cart', {from: 'ProductDetail'})
             }
           />
-          <ScrollView contentContainerStyle={{paddingBottom: height * 0.09}}>
+          <ScrollView
+            scrollEventThrottle={1}
+            contentContainerStyle={{paddingBottom: height * 0.09}}
+            onScroll={e => {
+              if (e.nativeEvent.contentOffset.y > 200) {
+                setTitleHidden(true);
+              } else {
+                setTitleHidden(false);
+              }
+            }}>
             <View>
               <View style={styles.bannerContainer}>
                 {data.images && data.images.length > 0 ? (
