@@ -108,7 +108,8 @@ const ProductDetail = props => {
           />
           <ScrollView
             scrollEventThrottle={1}
-            contentContainerStyle={{paddingBottom: height * 0.09}}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{paddingBottom: heightPercentageToDP(20)}}
             onScroll={e => {
               if (e.nativeEvent.contentOffset.y > 200) {
                 setTitleHidden(true);

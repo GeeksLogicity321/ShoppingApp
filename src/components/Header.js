@@ -13,6 +13,7 @@ import colors from '../constants/colors';
 import {RFPercentage} from 'react-native-responsive-fontsize';
 import {fontsFamily, fontsSize} from '../constants/fonts';
 import {useSelector} from 'react-redux';
+import Badge from './Badge';
 
 const Header = ({
   title,
@@ -60,11 +61,7 @@ const Header = ({
       </View>
       {isRightIcon && !isFilter && (
         <Pressable onPress={onRightPress} style={{width: '20%'}}>
-          {isCart && cartData.length > 0 && (
-            <View style={styles.badgeCount}>
-              <Text style={styles.count}>{cartData.length}</Text>
-            </View>
-          )}
+          {isCart && cartData.length > 0 && <Badge />}
           {!isCart ? (
             <View style={{alignSelf: 'flex-end'}}>
               <Feather name="search" size={RFPercentage(2.5)} color={'grey'} />
@@ -130,23 +127,6 @@ const styles = StyleSheet.create({
     fontSize: fontsSize.lg2,
     width: widthPercentageToDP(70),
     color: 'grey',
-  },
-  badgeCount: {
-    backgroundColor: 'red',
-    width: widthPercentageToDP(4.5),
-    height: widthPercentageToDP(4.5),
-    position: 'absolute',
-    zIndex: 1000,
-    top: heightPercentageToDP(-1),
-    right: widthPercentageToDP(-1.5),
-    borderRadius: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  count: {
-    fontFamily: fontsFamily.semibold,
-    fontSize: fontsSize.sm1,
-    color: 'white',
   },
   selfEnd: {
     width: '20%',

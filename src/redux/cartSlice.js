@@ -17,7 +17,7 @@ const cartSlice = createSlice({
         temp.qty = action.payload.qty;
         state.push(temp);
         Toast.show({
-          position: 'bottom',
+          position: 'top',
           type: 'success',
           text1: 'Item has been add to cart',
           visibilityTime: 1000,
