@@ -60,22 +60,12 @@ const Checkout = () => {
     }));
     if (userData?.shipping?.address_1 && contactNo) {
       let payload = {
-        payment_method: '',
-        payment_method_title: '',
+        payment_method: isCod ? 'cash on Delivery' : 'online',
+        payment_method_title: isCod ? 'cash on Delivery' : 'online',
         customer_id: userData?.id,
         set_paid: true,
-        billing: {
-          first_name: userData?.first_name,
-          last_name: userData?.last_name,
-          address_1: userData?.shipping?.address_1,
-          email: userData?.email,
-          phone: contactNo,
-        },
-        shipping: {
-          first_name: userData?.first_name,
-          last_name: userData?.last_name,
-          address_1: userData?.shipping?.address_1,
-        },
+        billing: {...userData?.billing, phone: contactNo},
+        shipping: userData?.shipping,
         line_items: cartMapped,
       };
       WCAPI.post('orders', payload)
@@ -104,7 +94,7 @@ const Checkout = () => {
 
   const gotoOrderDetail = () => {
     setIsCheckoutModal(false);
-    navigation.navigate('OrderDetail', {data: payload});
+    navigation.navigate('OrderDetail', {data: payload, fromCheckout: true});
   };
 
   return (

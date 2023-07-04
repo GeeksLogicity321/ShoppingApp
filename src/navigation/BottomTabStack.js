@@ -61,7 +61,7 @@ function CustomTabBar({state, descriptors, navigation}) {
                   inputRange: [0, 1],
                   outputRange: [
                     widthPercentageToDP(13),
-                    widthPercentageToDP(44.2),
+                    widthPercentageToDP(44.4),
                   ],
                 }),
               },

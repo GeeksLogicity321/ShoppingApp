@@ -26,7 +26,9 @@ import {setLoader} from '../../redux/globalSlice';
 const Order = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
+
   const {isLogin, userData} = useSelector(state => state.user);
+
   const [orders, setOrders] = useState([]);
   const [isRefresh, setIsRefresh] = useState(false);
 
@@ -42,7 +44,7 @@ const Order = () => {
   }, []);
 
   const getOrders = () => {
-    WCAPI.get('orders', {customer_id: userData?.id})
+    WCAPI.get('orders', {customer: userData?.id, per_page: 55})
       .then(response => {
         setOrders(response);
         dispatch(setLoader(false));

@@ -21,7 +21,7 @@ import constant from '../../constants/constant';
 
 const OrderDetail = props => {
   const navigation = useNavigation();
-  const {data} = props.route.params;
+  const {data, fromCheckout} = props?.route?.params;
 
   const calculateQty = useMemo(() => {
     let qty = 0;
@@ -37,7 +37,16 @@ const OrderDetail = props => {
         leftTitle={'Order Detail'}
         isBack
         isRightIcon={false}
-        onLeftPress={() => navigation.goBack()}
+        onLeftPress={() => {
+          if (fromCheckout) {
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'BottomTabStack'}],
+            });
+          } else {
+            navigation.goBack();
+          }
+        }}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.wrapper}>

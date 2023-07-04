@@ -42,7 +42,7 @@ const HomeCard = ({title, description, price, image, onPress, addToCart}) => {
         <View style={styles.bottomTextContainer}>
           <Text style={styles.price}>{`${constant.currency}. ${price}`}</Text>
           <TouchableOpacity activeOpacity={0.5} onPress={addToCart}>
-            <Text style={styles.cartText}>Add to Cart</Text>
+            <Text style={styles.cartText}>Add</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
     fontFamily: fontsFamily.semibold,
     fontSize: fontsSize.md1,
     textTransform: 'uppercase',
+    width: '80%',
   },
   cartText: {
     color: colors.blue,
